@@ -14,7 +14,7 @@ import datetime
 import sqlite3
 import uuid
 
-NOT_MY_KEY = b'ylcg3o6pv84aehqj'
+NOT_MY_KEY = b'ylcg3o6pv84aehqj'  # byte string to use for AES encryption and decryption
 
 
 # Define functions
@@ -103,7 +103,7 @@ def get_private_key_with_kid_from_db(expired=False):  # Get un/expired key from 
     return None, None
 
 
-def get_user_id_from_username(username):
+def get_user_id_from_username(username):  # Get user_id given a username from the database
     with sqlite3.connect('totally_not_my_privateKeys.db') as connGetID:
         cursor = connGetID.execute("SELECT id FROM users WHERE username = ?", (username,))
         user_data = cursor.fetchone()
@@ -181,7 +181,7 @@ class MyServer(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             auth_data = json.loads(post_data.decode('utf-8'))
 
-            # Existing authentication logic
+            # Authentication logic
             kid, key = get_private_key_with_kid_from_db('expired' in params)
 
             if not key:  # If no key returned/found
@@ -192,7 +192,7 @@ class MyServer(BaseHTTPRequestHandler):
             headers = {"kid": str(kid)}
             token_payload = {"user": auth_data.get('username'),
                              "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)}
-            key_pem = serialize_key_to_pem(key)
+            key_pem = serialize_key_to_pem(key)  # Serialize key
             encoded_jwt = jwt.encode(token_payload, key_pem, algorithm="RS256", headers=headers)
 
             # Log the details into the auth_logs table
